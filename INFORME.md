@@ -23,8 +23,20 @@ evaluación.
 
 ## 1. La aplicación respondiendo a través del Ingress, con una reserva creada desde el navegador
 
-<!-- PENDIENTE: captura nueva -->
-> ⚠️ **PENDIENTE:** captura del navegador en `http://reservas.local` creando una reserva.
+**La reserva creada desde el navegador.** La barra de direcciones muestra `http://reservas.local`:
+el navegador entra por el Ingress, no por el NodePort. Antes de reservar, el domingo 22/11/2026 tiene
+**3 de 30 turnos ocupados** (las reservas de demo).
+
+![navegador en reservas.local antes de la reserva](informe/i1-navegador-reservas-local-antes.jpg)
+
+Desde la interfaz se reserva el **Laboratorio de Redes** en la franja **10:00–12:00** (responsable
+"PRUEBA RESERVA DESDE NAVEGADOR", motivo "Ingress - reservas.local"). La grilla pasa a **4 de 30 turnos
+ocupados** y muestra la reserva nueva. El `POST /api/reservas` salió del navegador hacia el mismo
+origen `reservas.local`. El Ingress lo entregó al nginx del frontend, que lo reenvió a `reservas-api`,
+y la API lo guardó en MySQL. Después del `201`, la SPA vuelve a pedir la grilla
+(`GET /api/reservas?fecha=2026-11-22`) por el mismo camino, así que lo que se ve ya sale de la base.
+
+![reserva creada desde el navegador por el Ingress](informe/i1-navegador-reservas-local-reserva-creada.jpg)
 
 **El Ingress y su regla.** `reservas-app-ingress` tiene una única regla, `host: reservas.local`,
 `path: /`, hacia `reservas-frontend:8080`. La columna `ADDRESS` muestra la IP del controlador nginx;
