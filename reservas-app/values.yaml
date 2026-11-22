@@ -1,4 +1,4 @@
-namespace: reservas-app
+# Valores del chart reservas-app. El namespace lo define la release: helm install ... -n reservas-app
 
 frontend:
   name: reservas-frontend
@@ -16,6 +16,7 @@ frontend:
 
 api:
   name: reservas-api
+  # Réplicas iniciales: una vez instalado, las administra el HPA (entre minReplicas y maxReplicas).
   replicas: 2
   image:
     repository: antoniojv03/reservas-api
@@ -55,6 +56,8 @@ db:
     name: reservas-db-pvc
     accessMode: ReadWriteOnce
     storage: 1Gi
+  # Credenciales de LABORATORIO, no reales. En un entorno real no van en values.yaml:
+  # se inyectan desde un gestor externo de secretos (ver ARQUITECTURA.md, sección 4).
   secret:
     name: reservas-db-secret
     MYSQL_USER: "reservas_user"
@@ -63,6 +66,7 @@ db:
 
 ingress:
   name: reservas-app-ingress
+  className: nginx
   host: reservas.local
   path: /
   pathType: Prefix

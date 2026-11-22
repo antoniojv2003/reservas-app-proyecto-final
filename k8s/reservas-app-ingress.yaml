@@ -4,6 +4,7 @@ metadata:
   name: reservas-app-ingress
   namespace: reservas-app
 spec:
+  ingressClassName: nginx
   rules:
     - host: reservas.local
       http:

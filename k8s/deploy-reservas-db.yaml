@@ -7,6 +7,9 @@ metadata:
   namespace: reservas-app
 spec:
   replicas: 1
+  # Recreate: con un PVC ReadWriteOnce no puede haber dos mysqld sobre el mismo datadir
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: reservas-db
