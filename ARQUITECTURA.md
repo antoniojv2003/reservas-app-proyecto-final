@@ -81,7 +81,7 @@ la métrica observada crezca con la carga. En este proyecto solo `reservas-api` 
   porque `GET /reservas` resuelve un `JOIN` entre `reservas` y `salas`. El HPA calcula el porcentaje
   contra `resources.requests.cpu: 100m`, que es el denominador; sin request quedaría en `<unknown>`.
   Se demostró bajo carga: pasó de 2 a 6 réplicas con picos de 279 % y volvió a 2 tras la ventana de
-  estabilización ([INFORME §2](INFORME.md#2-autoescalado-bajo-carga-kubectl-get-hpa--w)).
+  estabilización (ver [INFORME.md, punto 2](INFORME.md#2-autoescalado-bajo-carga-kubectl-get-hpa--w)).
 
 - **`reservas-db` no: si tuviera un HPA, al escalar se rompería la base.** Es un Deployment con un PVC
   `ReadWriteOnce` en `local-path` (el volumen es un directorio de un nodo). Una segunda réplica caería
@@ -157,7 +157,7 @@ de que haya **un único** motor que vea todas las inserciones.
 
 **Prueba (entrega 6, punto 8):** con la API escalada a 3 réplicas se lanzaron 30 `POST` en paralelo
 por la misma sala, fecha y franja. Resultado: **1 respuesta `201` y 29 respuestas `409`**. El recuento
-en la base dio **exactamente 1** registro. Evidencia completa en [INFORME §5](INFORME.md#5-prueba-de-concurrencia-de-la-sexta-entrega).
+en la base dio **exactamente 1** registro. Evidencia completa en [INFORME.md, punto 5](INFORME.md#5-prueba-de-concurrencia-de-la-sexta-entrega).
 
 ---
 

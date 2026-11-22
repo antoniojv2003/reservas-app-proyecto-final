@@ -97,7 +97,7 @@ a 6 réplicas** (el máximo), y con 6 réplicas el promedio baja a 203 %.
 
 `kubectl top pods` confirma que la carga es real: las 6 réplicas de la API consumen entre 46m y 146m
 de CPU cada una, mientras que el frontend no se mueve (0–1m). Es la razón por la que el frontend no
-tiene autoescalador ([ARQUITECTURA §1c](ARQUITECTURA.md#c-por-qué-hay-un-solo-autoescalador-entre-los-doce-objetos-qué-ocurriría-si-se-le-asignara-uno-a-reservas-db-y-por-qué-tampoco-lo-tiene-el-frontend)).
+tiene autoescalador (ver [ARQUITECTURA.md, pregunta 1c](ARQUITECTURA.md#c-por-qué-hay-un-solo-autoescalador-entre-los-doce-objetos-qué-ocurriría-si-se-le-asignara-uno-a-reservas-db-y-por-qué-tampoco-lo-tiene-el-frontend)).
 
 ```
 watch -n 2 kubectl top pods -n reservas-app
@@ -255,7 +255,7 @@ docker run --rm reservas-frontend:v1 node --version
 
 **Configuración en tiempo de ejecución y sin credenciales:**
 
-- **Frontend:** `API_HOST`/`API_PORT` se sustituyen al arrancar ([ARQUITECTURA §1a](ARQUITECTURA.md#a-por-qué-el-frontend-se-configura-con-api_host-en-tiempo-de-ejecución-y-no-con-vite_api_url-en-tiempo-de-construcción)).
+- **Frontend:** `API_HOST`/`API_PORT` se sustituyen al arrancar (ver [ARQUITECTURA.md, pregunta 1a](ARQUITECTURA.md#a-por-qué-el-frontend-se-configura-con-api_host-en-tiempo-de-ejecución-y-no-con-vite_api_url-en-tiempo-de-construcción)).
 - **API:** lee `DB_*` y `PORT` del entorno; la versión entra como `ARG APP_VERSION` al construir
   (así se construyó `v2`).
 - **Credenciales:** ninguna imagen las contiene. `.dockerignore` excluye `.env`, y las credenciales
@@ -300,7 +300,7 @@ kubectl get all,cm,secret,pvc,ingress,hpa -n reservas-app
 ### C4. Configuración externalizada y persistencia
 
 **Secret.** `reservas-db-secret` con 3 claves. Base64 no es cifrado: se decodifica directamente, y por
-eso los valores del repositorio son de laboratorio ([ARQUITECTURA §4](ARQUITECTURA.md#gestión-externa-de-secretos)).
+eso los valores del repositorio son de laboratorio (ver [ARQUITECTURA.md, pregunta 4](ARQUITECTURA.md#gestión-externa-de-secretos)).
 
 ```
 kubectl get secret
@@ -312,7 +312,7 @@ kubectl get secret reservas-db-secret -n reservas-app -o jsonpath='{.data.MYSQL_
 ![secret decodificado](informe/c4-secret-base64-decodificado.png)
 
 **PVC con `subPath`.** El Deployment de la base monta `reservas-db-pvc` en `/var/lib/mysql` con
-`subPath: mysql` y queda en `Running` ([ARQUITECTURA §3.2](ARQUITECTURA.md#32-el-subpath-que-exige-el-directorio-de-datos-vacío-entrega-7)).
+`subPath: mysql` y queda en `Running` (ver [ARQUITECTURA.md, pregunta 3.2](ARQUITECTURA.md#32-el-subpath-que-exige-el-directorio-de-datos-vacío-entrega-7)).
 
 ```
 kubectl apply -f k8s/deploy-reservas-db.yaml
