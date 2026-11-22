@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: reservas-db
+  name: reservas-db
+  namespace: reservas-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservas-db
+  template:
+    metadata:
+      labels:
+        app: reservas-db
+    spec:
+      containers:
+        - name: reservas-db
+          image: mysql:8.4
+          envFrom:
+            - secretRef:
+                name: reservas-db-secret
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: reservas-api-config
+                  key: DB_NAME
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: datos
+              mountPath: /var/lib/mysql
+              subPath: mysql
+      volumes:
+        - name: datos
+          persistentVolumeClaim:
+            claimName: reservas-db-pvc
