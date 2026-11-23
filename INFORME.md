@@ -415,5 +415,87 @@ helm install reservas-app ./reservas-app -n reservas-app --create-namespace
 
 ![helm install](informe/c6-helm-install.png)
 
+**Instalación del chart final de este repositorio.** Las capturas anteriores son de la entrega 8. Antes
+de entregar, el chart de este repositorio se instaló desde cero en el clúster (`helm uninstall` +
+`helm install`). Registro de los comandos:
+
+```
+$ helm lint ./reservas-app
+==> Linting ./reservas-app
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+
+$ helm install reservas-app ./reservas-app -n reservas-app --create-namespace
+NAME: reservas-app
+LAST DEPLOYED: Mon Nov 23 00:55:46 2026
+NAMESPACE: reservas-app
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+
+$ kubectl get all,cm,secret,pvc,ingress,hpa -n reservas-app
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/reservas-api-8549846bbd-cfg5v        1/1     Running   0          24s
+pod/reservas-api-8549846bbd-knfsd        1/1     Running   0          24s
+pod/reservas-db-84475764cc-24fmw         1/1     Running   0          24s
+pod/reservas-frontend-6bb98c565d-95tb8   1/1     Running   0          24s
+pod/reservas-frontend-6bb98c565d-ts6kj   1/1     Running   0          24s
+
+NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+service/reservas-api        ClusterIP   10.97.89.180     <none>        3000/TCP         24s
+service/reservas-db         ClusterIP   10.110.1.60      <none>        3306/TCP         24s
+service/reservas-frontend   NodePort    10.102.189.242   <none>        8080:30301/TCP   24s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/reservas-api        2/2     2            2           24s
+deployment.apps/reservas-db         1/1     1            1           24s
+deployment.apps/reservas-frontend   2/2     2            2           24s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/reservas-api-8549846bbd        2         2         2       24s
+replicaset.apps/reservas-db-84475764cc         1         1         1       24s
+replicaset.apps/reservas-frontend-6bb98c565d   2         2         2       24s
+
+NAME                                                   REFERENCE                 TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/reservas-api-hpa   Deployment/reservas-api   cpu: <unknown>/50%   2         6         2          24s
+
+NAME                                 DATA   AGE
+configmap/kube-root-ca.crt           1      3h7m
+configmap/reservas-api-config        5      24s
+configmap/reservas-frontend-config   2      24s
+
+NAME                                        TYPE                 DATA   AGE
+secret/reservas-db-secret                   Opaque               3      25s
+secret/sh.helm.release.v1.reservas-app.v1   helm.sh/release.v1   1      25s
+
+NAME                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/reservas-db-pvc   Bound    pvc-bee72a10-9d17-464e-8b72-bc49c82140bd   1Gi        RWO            local-path     <unset>                 25s
+
+NAME                                             CLASS   HOSTS            ADDRESS         PORTS   AGE
+ingress.networking.k8s.io/reservas-app-ingress   nginx   reservas.local   172.16.21.224   80      25s
+
+$ kubectl get hpa -n reservas-app
+NAME               REFERENCE                 TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+reservas-api-hpa   Deployment/reservas-api   cpu: 11%/50%   2         6         2          102s
+
+$ kubectl get deploy reservas-db -n reservas-app -o jsonpath='{.spec.strategy}{"\n"}'
+{"type":"Recreate"}
+```
+
+Lo que muestra el registro:
+
+- Se crean los 12 objetos: todos los Pods en `Running`, el PVC `Bound` y el Ingress con clase `nginx`
+  y ADDRESS asignada.
+- A los 24 segundos el HPA muestra `<unknown>` porque metrics-server todavía no midió los Pods nuevos.
+  A los 102 segundos ya informa `cpu: 11%/50%`.
+- La base usa la estrategia `Recreate`, para que nunca haya dos `mysqld` sobre el mismo volumen (ver
+  [ARQUITECTURA.md, pregunta 1c](ARQUITECTURA.md#c-por-qué-hay-un-solo-autoescalador-entre-los-doce-objetos-qué-ocurriría-si-se-le-asignara-uno-a-reservas-db-y-por-qué-tampoco-lo-tiene-el-frontend)).
+
+La aplicación responde en `http://reservas.local` con la base recién creada y los datos de demo:
+
+![chart final funcionando en reservas.local](informe/c6-navegador-chart-final.png)
+
 El ciclo completo de la release está en la [sección 3](#3-ciclo-de-vida-de-la-release-helm-upgrade-helm-rollback-y-helm-history)
 y la prueba de que los parámetros son reales, en la [sección 4](#4-un-valor-de-valuesyaml-es-real-la-misma-plantilla-renderizada-dos-veces).
