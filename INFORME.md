@@ -192,8 +192,56 @@ helm history reservas-app -n reservas-app
 
 ## 4. Un valor de `values.yaml` es real: la misma plantilla renderizada dos veces
 
-<!-- PENDIENTE: captura o registro nuevo -->
-> ⚠️ **PENDIENTE:** registro de `helm template` con los valores por defecto y con `--set`.
+Un `values.yaml` con valores que ninguna plantilla usa se instala sin advertencias. La prueba honesta
+es la inversa: renderizar la **misma plantilla** dos veces, cambiando valores con `--set`, y comprobar
+que el manifiesto cambia. `helm template` no toca el clúster: solo genera el YAML. Con `-s` se renderiza
+una sola plantilla.
+
+**Primer renderizado: valores por defecto.** `replicas: 2` e `image: "antoniojv03/reservas-api:v1"`,
+tal como están en `values.yaml` (`api.replicas`, `api.image.repository`, `api.image.tag`).
+
+```
+helm template reservas-app ./reservas-app -n reservas-app -s templates/deployment-reservas-api.yaml
+```
+
+![helm template con los valores por defecto](informe/i4-1-template-api-valores-por-defecto.jpg)
+
+**Segundo renderizado: la misma plantilla con `--set api.image.tag=v2 --set api.replicas=3`.** Ahora
+dice `replicas: 3` e `image: "antoniojv03/reservas-api:v2"`.
+
+```
+helm template reservas-app ./reservas-app -n reservas-app -s templates/deployment-reservas-api.yaml \
+  --set api.image.tag=v2 --set api.replicas=3
+```
+
+![helm template con --set](informe/i4-2-template-api-con-set.jpg)
+
+**La diferencia entre los dos renderizados**, con `diff`: cambian **exactamente** las dos líneas que
+corresponden a los dos valores modificados, y nada más. Los parámetros son reales, no decorativos.
+
+```
+diff <(helm template reservas-app ./reservas-app -n reservas-app -s templates/deployment-reservas-api.yaml) \
+     <(helm template reservas-app ./reservas-app -n reservas-app -s templates/deployment-reservas-api.yaml \
+         --set api.image.tag=v2 --set api.replicas=3)
+```
+
+![diff de los dos renderizados del Deployment](informe/i4-3-diff-template-api.jpg)
+
+**Lo mismo con los umbrales del autoescalador.** Cambiando `api.hpa.maxReplicas` y
+`api.hpa.targetCPUUtilizationPercentage`, la plantilla del HPA pasa de `maxReplicas: 6` a `10` y de
+`averageUtilization: 50` a `70`.
+
+```
+diff <(helm template reservas-app ./reservas-app -n reservas-app -s templates/hpa-reservas-api.yaml) \
+     <(helm template reservas-app ./reservas-app -n reservas-app -s templates/hpa-reservas-api.yaml \
+         --set api.hpa.maxReplicas=10 --set api.hpa.targetCPUUtilizationPercentage=70)
+```
+
+![diff de los dos renderizados del HPA](informe/i4-4-diff-template-hpa.jpg)
+
+El mismo mecanismo es el que usó el `helm upgrade --set api.image.tag=v2` del
+[punto 3](#3-ciclo-de-vida-de-la-release-helm-upgrade-helm-rollback-y-helm-history), que efectivamente
+cambió la imagen de la API en el clúster.
 
 ---
 
